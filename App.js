@@ -8,7 +8,7 @@ import {
   useColorScheme,
   View,
 } from 'react-native';
-import { Button } from 'react-native-paper';
+import { Button, Colors } from 'react-native-paper';
 import QuizScreen from './screens/QuizScreen';
 
 export default class App extends React.Component {
@@ -29,7 +29,7 @@ export default class App extends React.Component {
             :
             <View>
               <Text style={styles.headLine}>아래 버튼을 터치하면 퀴즈가 시작됩니다</Text>
-              <Button mode="contained" onPress={this.setQuizStart.bind(this)}>
+              <Button mode="contained" onPress={this.setQuizStart.bind(this)} color={Colors.blue600} labelStyle={{ fontWeight:'bold'}}>
                 퀴즈 풀기
               </Button>
             </View>

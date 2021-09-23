@@ -5,13 +5,11 @@ import {
     StatusBar,
     StyleSheet,
     Text,
-    useColorScheme,
     View,
 } from 'react-native';
 import { ActivityIndicator, Button, Colors } from 'react-native-paper';
 import Quiz from '../components/Quiz';
 import { Header } from 'react-native-elements'
-// import AsyncStorage from '@react-native-async-storage/async-storage';
 import Modal from "react-native-modal";
 import { PieChart } from 'react-native-svg-charts'
 
@@ -36,7 +34,6 @@ export default class QuizScreen extends React.Component {
         await this.getQuizs()
         await this.setAnswers()
         await this.setState({ loading: false, startTime: new Date() })
-        console.log(this.state.startTime)
     }
 
     getQuizs = async () => {
@@ -110,25 +107,6 @@ export default class QuizScreen extends React.Component {
         await this.setState({ resultView: true, endTime: new Date(), correctCount: correctCount, wrongCount: wrongCount })
     }
 
-    // storeData = async (value) => {
-    //     try {
-    //         await AsyncStorage.setItem('@storage_Key', value)
-    //     } catch (e) {
-    //         console.log('AsyncStorage store error')
-    //     }
-    // }
-
-    // getData = async () => {
-    //     try {
-    //         const value = await AsyncStorage.getItem('@storage_Key')
-    //         if (value !== null) {
-    //             // value previously stored
-    //         }
-    //     } catch (e) {
-    //         console.log('AsyncStorage get error')
-    //     }
-    // }
-
     repeatQuiz = async () => {
         await this.setState({ quizNum: 0, resultView: false, showButton: false, startTime: new Date(), correctCount: 0, wrongCount: 0 })
         await this.setAnswers()
@@ -195,8 +173,6 @@ export default class QuizScreen extends React.Component {
                     <View style={{ alignItems: 'center', margin: 30 }}>
                         <Quiz
                             question={this.state.quizs[this.state.quizNum].question}
-                            // correct_answer={this.state.quizs[this.state.quizNum].correct_answer}
-                            // incorrect_answers={this.state.quizs[this.state.quizNum].incorrect_answers}
                             answers={this.state.answers}
                             pressAnswer={this.pressAnswer}
                         />
@@ -220,7 +196,7 @@ export default class QuizScreen extends React.Component {
                                             :
                                             <Text style={styles.wrongText}>X  오답입니다!</Text>
                                         }
-                                        <Button mode="contained" onPress={this.nextQuiz}>
+                                        <Button mode="contained" onPress={this.nextQuiz} color={Colors.blue500} labelStyle={{ color:'white', fontWeight:'bold'}}>
                                             다음 문항
                                         </Button>
                                     </View>
@@ -235,15 +211,15 @@ export default class QuizScreen extends React.Component {
                                 <View style={styles.flexRow}>
                                     <PieChart innerRadius={25} style={{ width: 90, height: 90 }} data={[{ key: "correct", svg: { fill: Colors.green900 }, value: this.state.correctCount * 10 }, { key: "wrong", svg: { fill: Colors.red600 }, value: this.state.wrongCount * 10 }]} />
                                     <View>
-                                        <Text style={{ fontSize:16, color: Colors.green900 }}>정답 수: {this.state.correctCount}</Text>
-                                        <Text style={{ fontSize:16, color: Colors.red600, marginTop: 5 }}>오답 수: {this.state.wrongCount}</Text>
+                                        <Text style={{ fontSize:15, color: Colors.green900 }}>정답 수: {this.state.correctCount}</Text>
+                                        <Text style={{ fontSize:15, color: Colors.red600, marginTop: 3 }}>오답 수: {this.state.wrongCount}</Text>
                                     </View>
                                 </View>
                                 <View style={styles.flexRow}>
-                                    <Button mode="contained" onPress={this.repeatQuiz}>
+                                    <Button mode="contained" onPress={this.repeatQuiz} color={Colors.indigo500} labelStyle={{ color:'white' }}>
                                         다시 풀기
                                     </Button>
-                                    <Button mode="contained" onPress={this.visibleModal}>
+                                    <Button mode="contained" onPress={this.visibleModal} color={Colors.red300} labelStyle={{ color:'white' }}>
                                         오답 노트
                                     </Button>
                                 </View>
