@@ -17,7 +17,9 @@ export default class QuizScreen extends React.Component {
         loading: true,
         quizs: [],
         quizNum: 0,
-        answers: []
+        answers: [],
+        selectedAnswer: null,
+        result: []
     }
 
 
@@ -48,7 +50,7 @@ export default class QuizScreen extends React.Component {
             answers.push({ id: i, label: this.state.quizs[this.state.quizNum].incorrect_answers[i], value: this.state.quizs[this.state.quizNum].incorrect_answers[i] })
         }
         answers.push({ id: this.state.quizs[this.state.quizNum].incorrect_answers.length, label: this.state.quizs[this.state.quizNum].correct_answer, value: this.state.quizs[this.state.quizNum].correct_answer })
-        await this.setState({ answers: answers })
+        await this.setState({ answers: answers.sort(() => Math.random() - 0.5)})
     }
 
     nextQuiz = async () => {
@@ -57,7 +59,13 @@ export default class QuizScreen extends React.Component {
     }
 
     pressAnswer = async(answersArray) => {
-        console.log(answersArray)
+        let selectedAnswer = null
+        for(let i=0; i<answersArray.length; i++) {
+            if(answersArray[i].selected) {
+                selectedAnswer = answersArray[i].value
+            }
+        }
+        await this.setState({ selectedAnswer: selectedAnswer })
         this.setState({ showButton: true })
     }
 
@@ -103,7 +111,7 @@ export default class QuizScreen extends React.Component {
                             <View>
                                 {this.state.quizNum + 1 == this.state.quizs.length ?
                                     <Button mode="contained" style={{ marginTop: 20 }}>
-                                        퀴즈 종료
+                                        결과 보기
                                     </Button>
                                     :
                                     <Button mode="contained" style={{ marginTop: 20 }} onPress={this.nextQuiz}>

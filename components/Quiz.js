@@ -27,23 +27,26 @@ export default class Quiz extends React.Component {
   }
 
   render() {
-    return (
-      <SafeAreaView>
-        {this.state.loading ?
+    if (this.state.loading) {
+      return (
+        <SafeAreaView>
           <ActivityIndicator />
-          :
-          <View>
-            <Text>{this.props.question}</Text>
-            <View style={{ marginTop: 20, alignItems: 'flex-start' }}>
-              <RadioGroup
-                radioButtons={this.props.answers}
-                onPress={this.pressAnswer}
-              />
-            </View>
+        </SafeAreaView>
+      )
+    } else {
+      return (
+        <SafeAreaView style={{ width:'100%' }}>
+          <Text>{this.props.question}</Text>
+          <View style={{ marginTop: 20, alignItems:'flex-start' }}>
+            <RadioGroup
+              radioButtons={this.props.answers}
+              onPress={this.pressAnswer}
+              containerStyle={{ alignItems:'baseline'}}
+            />
           </View>
-        }
-      </SafeAreaView>
-    )
+        </SafeAreaView>
+      )
+    }
   }
 }
 
