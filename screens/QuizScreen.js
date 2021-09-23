@@ -11,6 +11,7 @@ import {
 import { ActivityIndicator, Button, Colors } from 'react-native-paper';
 import Quiz from '../components/Quiz';
 import { Header } from 'react-native-elements'
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default class QuizScreen extends React.Component {
     state = {
@@ -22,7 +23,9 @@ export default class QuizScreen extends React.Component {
         result: [],
         resultView: false,
         startTime: null,
-        endTime: null
+        endTime: null,
+        correctCount: 0,
+        wrongCount: 0
     }
 
 
@@ -55,7 +58,19 @@ export default class QuizScreen extends React.Component {
         await this.setState({ answers: answers.sort(() => Math.random() - 0.5)}) // 선택지 랜덤 출력
     }
 
+    updateResult = async() => {
+        let result = this.state.result
+        result.push({
+            question: this.state.quizs[this.state.quizNum].question,
+            correctAnswer: this.state.quizs[this.state.quizNum].correct_answer,
+            selectedAnswer: this.state.selectedAnswer
+        })
+        await this.setState({ result: result })
+        console.log(this.state.result)
+    }
+
     nextQuiz = async () => {
+        await this.updateResult()
         await this.setState({ showButton: false, quizNum: this.state.quizNum + 1 })
         await this.setAnswers()
     }
@@ -78,10 +93,41 @@ export default class QuizScreen extends React.Component {
         this.setState({ showButton: true })
     }
 
-    showResult = async () => { await this.setState({ resultView: true, endTime: new Date() })}
+    showResult = async () => { 
+        await this.updateResult()
+        let correctCount = 0
+        let wrongCount = 0
+        for(let i=0; i<this.state.result.length; i++) {
+            if(this.state.result[i].correctAnswer == this.state.result[i].selectedAnswer ) {
+                correctCount++
+            } else {
+                wrongCount++
+            }
+        }
+        await this.setState({ resultView: true, endTime: new Date(), correctCount: correctCount, wrongCount: wrongCount })
+    }
+
+    storeData = async (value) => {
+        try {
+            await AsyncStorage.setItem('@storage_Key', value)
+        } catch (e) {
+            console.log('AsyncStorage store error')
+        }
+    }
+
+    getData = async () => {
+        try {
+            const value = await AsyncStorage.getItem('@storage_Key')
+            if (value !== null) {
+                // value previously stored
+            }
+        } catch (e) {
+            console.log('AsyncStorage get error')
+        }
+    }
 
     repeatQuiz = async () => { 
-        await this.setState({ quizNum: 0, resultView: false, showButton: false, startTime: new Date() })
+        await this.setState({ quizNum: 0, resultView: false, showButton: false, startTime: new Date(), correctCount: 0, wrongCount: 0 })
         await this.setAnswers()
     }
 
@@ -105,10 +151,8 @@ export default class QuizScreen extends React.Component {
                 <SafeAreaView style={{ flex: 1, width: '100%' }}>
                     <Header
                         placement="center"
-                        barStyle="dark-content" // or directly
-                        // leftComponent={<Text>퀴즈</Text>}
+                        barStyle="dark-content"
                         centerComponent={<Text style={{ fontWeight:'bold' }}>퀴즈  ({this.state.quizNum+1 + ' / ' + this.state.quizs.length})</Text>}
-                        // rightComponent={<Text>퀴즈</Text>}
                         containerStyle={{
                             backgroundColor: '#FFFFFF',
                             height: 50
@@ -128,7 +172,7 @@ export default class QuizScreen extends React.Component {
                                 {this.state.quizNum + 1 == this.state.quizs.length ?
                                     <View style={styles.flexRow}>
                                         {this.state.correct ?
-                                            <Text style={styles.rightText}>O  정답입니다!</Text>
+                                            <Text style={styles.correctText}>O  정답입니다!</Text>
                                             :
                                             <Text style={styles.wrongText}>X  오답입니다!</Text>
                                         }
@@ -139,7 +183,7 @@ export default class QuizScreen extends React.Component {
                                     :
                                     <View style={styles.flexRow}>
                                         {this.state.correct ?
-                                            <Text style={styles.rightText}>O  정답입니다!</Text>
+                                            <Text style={styles.correctText}>O  정답입니다!</Text>
                                             :
                                             <Text style={styles.wrongText}>X  오답입니다!</Text>
                                         }
@@ -155,8 +199,8 @@ export default class QuizScreen extends React.Component {
                         {this.state.resultView ?
                             <View style={{ marginTop: 30 }}>
                                 <Text>총 시험시간: {(this.state.endTime.getTime() - this.state.startTime.getTime())/1000}초</Text>
-                                <Text>정답 수: </Text>
-                                <Text>오답 수: </Text>
+                                <Text>정답 수: {this.state.correctCount}</Text>
+                                <Text>오답 수: {this.state.wrongCount}</Text>
                                 <View style={styles.flexRow}>
                                     <Button mode="contained" onPress={this.repeatQuiz}>
                                         다시 풀기
@@ -189,7 +233,7 @@ const styles = StyleSheet.create({
         width: '70%', 
         marginTop: 20
     },
-    rightText: {
+    correctText: {
         fontSize: 16, 
         color:Colors.green900,
         fontWeight:'bold'
