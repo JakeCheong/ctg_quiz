@@ -66,7 +66,6 @@ export default class QuizScreen extends React.Component {
             selectedAnswer: this.state.selectedAnswer
         })
         await this.setState({ result: result })
-        console.log(this.state.result)
     }
 
     nextQuiz = async () => {
@@ -108,8 +107,15 @@ export default class QuizScreen extends React.Component {
     }
 
     repeatQuiz = async () => {
-        await this.setState({ quizNum: 0, resultView: false, showButton: false, startTime: new Date(), correctCount: 0, wrongCount: 0 })
+        await this.setState({ quizNum: 0, resultView: false, showButton: false, startTime: new Date(), correctCount: 0, wrongCount: 0, result: [] })
         await this.setAnswers()
+    }
+
+    newQuiz = async () => {
+        await this.setState({ loading: true, quizNum: 0, resultView: false, showButton: false, correctCount: 0, wrongCount: 0, result: [] })
+        await this.getQuizs()
+        await this.setAnswers()
+        await this.setState({ loading: false, startTime: new Date() })
     }
 
     visibleModal = async () => { this.setState({ visibleModal: true }) }
@@ -132,14 +138,15 @@ export default class QuizScreen extends React.Component {
             )
         } else {
             return (
-                <SafeAreaView style={{ flex: 1, width: '100%' }}>
+                <SafeAreaView>
                     <Header
                         placement="center"
                         barStyle="dark-content"
+                        backgroundColor="white"
                         centerComponent={<Text style={{ fontWeight: 'bold' }}>퀴즈  ({this.state.quizNum + 1 + ' / ' + this.state.quizs.length})</Text>}
                         containerStyle={{
                             backgroundColor: '#FFFFFF',
-                            height: 50
+                            marginTop: Platform.OS == 'ios' ? 0 : 30
                         }}
                     />
                     <Modal isVisible={this.state.visibleModal} style={styles.modal}>
@@ -147,8 +154,10 @@ export default class QuizScreen extends React.Component {
                             <Header
                                 placement="center"
                                 barStyle="dark-content"
+                                backgroundColor="white"
                                 leftComponent={<Text onPress={this.hideModal}>  닫기</Text>}
                                 centerComponent={<Text style={{ fontWeight: 'bold' }}>오답 노트</Text>}
+                                rightComponent={<Text>오답:  {this.state.wrongCount + '/' + this.state.quizs.length}</Text>}
                                 containerStyle={{
                                     backgroundColor: '#FFFFFF',
                                     height: 50
@@ -160,8 +169,8 @@ export default class QuizScreen extends React.Component {
                                         return (
                                             <View key={i} style={{ margin: 15 }}>
                                                 <Text>{item.question}</Text>
-                                                <Text style={{ marginTop: 10 }}>내가 선택한 정답: {item.selectedAnswer}</Text>
-                                                <Text style={{ marginTop: 5 }}>실제 정답: {item.correctAnswer}</Text>
+                                                <Text style={{ marginTop: 10, color:Colors.red600 }}>선택한 답: {item.selectedAnswer}</Text>
+                                                <Text style={{ marginTop: 5, color:Colors.green900 }}>실제 정답: {item.correctAnswer}</Text>
                                                 <View style={{ marginTop: 20, height: 2, backgroundColor: Colors.grey300 }}></View>
                                             </View>
                                         )
@@ -177,7 +186,7 @@ export default class QuizScreen extends React.Component {
                             pressAnswer={this.pressAnswer}
                         />
                         {this.state.showButton ?
-                            <View>
+                            <View style={{alignItems:'center'}}>
                                 {this.state.quizNum + 1 == this.state.quizs.length ?
                                     <View style={styles.flexRow}>
                                         {this.state.correct ?
@@ -191,11 +200,13 @@ export default class QuizScreen extends React.Component {
                                     </View>
                                     :
                                     <View style={styles.flexRow}>
+                                        <View>
                                         {this.state.correct ?
                                             <Text style={styles.correctText}>O  정답입니다!</Text>
                                             :
                                             <Text style={styles.wrongText}>X  오답입니다!</Text>
                                         }
+                                        </View>
                                         <Button mode="contained" onPress={this.nextQuiz} color={Colors.blue500} labelStyle={{ color:'white', fontWeight:'bold'}}>
                                             다음 문항
                                         </Button>
@@ -209,18 +220,21 @@ export default class QuizScreen extends React.Component {
                             <View style={{ marginTop: 30 }}>
                                 <Text>총 시험시간: {(this.state.endTime.getTime() - this.state.startTime.getTime()) / 1000}초</Text>
                                 <View style={styles.flexRow}>
-                                    <PieChart innerRadius={25} style={{ width: 90, height: 90 }} data={[{ key: "correct", svg: { fill: Colors.green900 }, value: this.state.correctCount * 10 }, { key: "wrong", svg: { fill: Colors.red600 }, value: this.state.wrongCount * 10 }]} />
-                                    <View>
+                                    <PieChart innerRadius={25} style={{ width: 90, height: 90 }} data={[{ key: "correct", svg: { fill: Colors.green300 }, value: this.state.correctCount * 10 }, { key: "wrong", svg: { fill: Colors.red300 }, value: this.state.wrongCount * 10 }]} />
+                                    <View style={{ alignItems:'baseline'}}>
                                         <Text style={{ fontSize:15, color: Colors.green900 }}>정답 수: {this.state.correctCount}</Text>
                                         <Text style={{ fontSize:15, color: Colors.red600, marginTop: 3 }}>오답 수: {this.state.wrongCount}</Text>
                                     </View>
                                 </View>
                                 <View style={styles.flexRow}>
-                                    <Button mode="contained" onPress={this.repeatQuiz} color={Colors.indigo500} labelStyle={{ color:'white' }}>
-                                        다시 풀기
-                                    </Button>
                                     <Button mode="contained" onPress={this.visibleModal} color={Colors.red300} labelStyle={{ color:'white' }}>
                                         오답 노트
+                                    </Button>
+                                    <Button mode="contained" onPress={this.repeatQuiz} color={Colors.green300} labelStyle={{ color:'white' }}>
+                                        다시 풀기
+                                    </Button>
+                                    <Button mode="contained" onPress={this.newQuiz} color={Colors.blue300} labelStyle={{ color:'white' }}>
+                                        새로 하기
                                     </Button>
                                 </View>
                             </View>
@@ -243,8 +257,8 @@ const styles = StyleSheet.create({
     flexRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between',
-        width: '70%',
+        justifyContent: 'space-around',
+        width: '90%',
         marginTop: 20
     },
     correctText: {
